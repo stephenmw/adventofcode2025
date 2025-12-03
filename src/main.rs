@@ -17,9 +17,9 @@ use clap::{Parser, Subcommand};
 use rayon::prelude::*;
 
 #[derive(Parser)]
-#[command(name = "aoc2023")]
+#[command(name = "aoc2025")]
 #[command(author = "Stephen Weinberg")]
-#[command(about = "Solves Advent of Code 2024", long_about = None)]
+#[command(about = "Solves Advent of Code 2025", long_about = None)]
 struct Cli {
     #[command(subcommand)]
     commands: Commands,

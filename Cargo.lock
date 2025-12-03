@@ -3,7 +3,7 @@
 version = 4
 
 [[package]]
-name = "adventofcode2024"
+name = "adventofcode2025"
 version = "0.1.0"
 dependencies = [
  "ahash",
