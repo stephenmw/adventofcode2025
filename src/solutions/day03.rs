@@ -20,13 +20,16 @@ fn solve(input: &str, n: usize) -> Result<String, anyhow::Error> {
 }
 
 fn largest_output_n_digits(digits: &[u8], n: usize) -> u64 {
-    if n == 0 {
-        return 0;
+    fn rec(digits: &[u8], n: usize, ret: u64) -> u64 {
+        if n == 0 {
+            return ret;
+        }
+
+        let (pos, d) = first_largest_digit(&digits[..digits.len() - n + 1]).unwrap();
+        rec(&digits[pos + 1..], n - 1, ret * 10 + d as u64)
     }
 
-    let (pos, d) = first_largest_digit(&digits[..digits.len() - n + 1]).unwrap();
-    let next_digits = largest_output_n_digits(&digits[pos + 1..], n - 1);
-    d as u64 * 10u64.pow(n as u32 - 1) + next_digits
+    rec(digits, n, 0)
 }
 
 fn first_largest_digit(digits: &[u8]) -> Option<(usize, u8)> {
