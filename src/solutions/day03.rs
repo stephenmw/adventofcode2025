@@ -1,22 +1,19 @@
 use crate::solutions::prelude::*;
 
 pub fn problem1(input: &str) -> Result<String, anyhow::Error> {
-    let batteries = parse!(input);
-
-    let ans: u64 = batteries
-        .iter()
-        .map(|battery| largest_output_n_digits(battery, 2))
-        .sum();
-
-    Ok(ans.to_string())
+    solve(input, 2)
 }
 
 pub fn problem2(input: &str) -> Result<String, anyhow::Error> {
+    solve(input, 12)
+}
+
+fn solve(input: &str, n: usize) -> Result<String, anyhow::Error> {
     let batteries = parse!(input);
 
     let ans: u64 = batteries
         .iter()
-        .map(|battery| largest_output_n_digits(battery, 12))
+        .map(|battery| largest_output_n_digits(battery, n))
         .sum();
 
     Ok(ans.to_string())

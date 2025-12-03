@@ -3,19 +3,18 @@ use crate::solutions::prelude::*;
 use crate::range::Range;
 
 pub fn problem1(input: &str) -> Result<String, anyhow::Error> {
-    let data = parse!(input);
-    let ans: u64 = data
-        .iter()
-        .flat_map(|r| r.iter().filter(|&n| !is_valid(n)))
-        .sum();
-    Ok(ans.to_string())
+    solve(input, is_valid)
 }
 
 pub fn problem2(input: &str) -> Result<String, anyhow::Error> {
+    solve(input, is_valid2)
+}
+
+fn solve(input: &str, valid_fn: fn(u64) -> bool) -> Result<String, anyhow::Error> {
     let data = parse!(input);
     let ans: u64 = data
         .iter()
-        .flat_map(|r| r.iter().filter(|&n| !is_valid2(n)))
+        .flat_map(|r| r.iter().filter(|&n| !valid_fn(n)))
         .sum();
     Ok(ans.to_string())
 }
