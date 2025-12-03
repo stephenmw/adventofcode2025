@@ -51,7 +51,7 @@ mod parser {
     use crate::parser::prelude::*;
 
     pub fn parse(input: &str) -> IResult<&str, Vec<Vec<u8>>> {
-        let digit = one_of("0123456789").map(|c| c.to_string().parse().unwrap());
+        let digit = one_of("0123456789").map(|c| c.to_digit(10).unwrap() as u8);
         let line = ws_line(many1(digit));
         let lines = many1(line);
         ws_all_consuming(lines).parse_complete(input)
