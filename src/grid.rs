@@ -97,13 +97,18 @@ impl Point {
     }
 
     pub fn iter_adjacent8(&self) -> impl Iterator<Item = Point> {
-        let p = *self;
-        let simple_dir = self.iter_adjacent();
-        let compound_dir = Direction::iter()
-            .flat_map(|d1| std::iter::repeat(d1).zip(Direction::iter()))
-            .filter(|(a, b)| a != b && a.opposite() != *b)
-            .filter_map(move |(a, b)| p.next(a).and_then(|x| x.next(b)));
-        simple_dir.chain(compound_dir)
+        (-1..=1).flat_map(move |dx| {
+            (-1..=1).filter_map(move |dy| {
+                if dx == 0 && dy == 0 {
+                    None
+                } else {
+                    Some(Point::new(
+                        self.x.checked_add_signed(dx)?,
+                        self.y.checked_add_signed(dy)?,
+                    ))
+                }
+            })
+        })
     }
 }
 
