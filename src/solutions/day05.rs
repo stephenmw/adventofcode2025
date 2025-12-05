@@ -1,39 +1,21 @@
-use ahash::HashSet;
-use rand::rand_core::le;
-
 use crate::solutions::prelude::*;
 
-use crate::range::Range;
+use crate::range::{Range, RangeSet};
 
 pub fn problem1(input: &str) -> Result<String, anyhow::Error> {
     let (ranges, ingredients) = parse!(input);
+    let set = RangeSet::from(ranges);
     let ans: usize = ingredients
         .iter()
-        .filter(|&ingredient| ranges.iter().any(|r| r.contains(*ingredient)))
+        .filter(|&ingredient| set.contains(*ingredient))
         .count();
     Ok(ans.to_string())
 }
 
 pub fn problem2(input: &str) -> Result<String, anyhow::Error> {
-    let (mut ranges, _) = parse!(input);
-    ranges.sort_by_key(|x| x.start);
-
-    let merged_ranges = ranges.iter().fold(Vec::new(), |mut acc, r| {
-        let Some(last) = acc.last_mut() else {
-            acc.push(*r);
-            return acc;
-        };
-
-        match last.merge(r) {
-            Some(merged) => *last = merged,
-            None => acc.push(*r),
-        };
-
-        acc
-    });
-
-    let ans: u64 = merged_ranges.iter().map(|r| r.length()).sum();
-    Ok(ans.to_string())
+    let (ranges, _) = parse!(input);
+    let set = RangeSet::from(ranges);
+    Ok(set.len().to_string())
 }
 
 mod parser {
