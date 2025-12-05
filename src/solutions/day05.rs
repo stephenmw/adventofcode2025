@@ -18,20 +18,21 @@ pub fn problem2(input: &str) -> Result<String, anyhow::Error> {
     let (mut ranges, _) = parse!(input);
     ranges.sort_by_key(|x| x.start);
 
-    let mut i = 0;
-    while i < ranges.len() - 1 {
-        match ranges[i].merge(&ranges[i + 1]) {
-            Some(merged) => {
-                ranges[i] = merged;
-                ranges.remove(i + 1);
-            }
-            None => {
-                i += 1;
-            }
-        }
-    }
+    let merged_ranges = ranges.iter().fold(Vec::new(), |mut acc, r| {
+        let Some(last) = acc.last_mut() else {
+            acc.push(*r);
+            return acc;
+        };
 
-    let ans = ranges.iter().map(|r| r.length()).sum::<u64>();
+        match last.merge(r) {
+            Some(merged) => *last = merged,
+            None => acc.push(*r),
+        };
+
+        acc
+    });
+
+    let ans: u64 = merged_ranges.iter().map(|r| r.length()).sum();
     Ok(ans.to_string())
 }
 
