@@ -55,6 +55,21 @@ impl Range {
     pub fn sum(&self) -> u64 {
         self.iter().sum()
     }
+
+    pub fn contains(&self, n: u64) -> bool {
+        n >= self.start && n < self.end
+    }
+
+    pub fn merge(&self, other: &Range) -> Option<Range> {
+        if self.end < other.start || other.end < self.start {
+            return None;
+        }
+
+        Some(Range {
+            start: self.start.min(other.start),
+            end: self.end.max(other.end),
+        })
+    }
 }
 
 #[cfg(test)]
