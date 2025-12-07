@@ -19,7 +19,7 @@ fn solve(input: &str) -> Result<(usize, usize), anyhow::Error> {
     let start = grid
         .iter_items()
         .find(|(_, c)| **c == Cell::Start)
-        .unwrap()
+        .ok_or_else(|| anyhow::anyhow!("Start cell not found"))?
         .0;
 
     let mut beams = AHashMap::new();
