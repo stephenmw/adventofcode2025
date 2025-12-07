@@ -5,25 +5,16 @@ use crate::solutions::prelude::*;
 use crate::grid::{Direction, Grid, Point};
 
 pub fn problem1(input: &str) -> Result<String, anyhow::Error> {
-    let grid = parse!(input);
-    let start = grid
-        .iter_items()
-        .find(|(_, c)| **c == Cell::Start)
-        .unwrap()
-        .0;
-
-    let mut beams = vec![start];
-    let mut total_splits = 0;
-    while !beams.is_empty() {
-        let (new_beams, splits) = step(&grid, &beams);
-        total_splits += splits;
-        beams = new_beams;
-    }
-
-    Ok(total_splits.to_string())
+    let (splitters_hit, _) = solve(input)?;
+    Ok(splitters_hit.to_string())
 }
 
 pub fn problem2(input: &str) -> Result<String, anyhow::Error> {
+    let (_, total_worlds) = solve(input)?;
+    Ok(total_worlds.to_string())
+}
+
+fn solve(input: &str) -> Result<(usize, usize), anyhow::Error> {
     let grid = parse!(input);
     let start = grid
         .iter_items()
@@ -32,50 +23,22 @@ pub fn problem2(input: &str) -> Result<String, anyhow::Error> {
         .0;
 
     let mut beams = AHashMap::new();
+    let mut total_splitters_hit = 0;
     beams.insert(start, 1);
     loop {
-        let new_beams = step2(&grid, &beams);
+        let (new_beams, spliters_hit) = step(&grid, &beams);
+        total_splitters_hit += spliters_hit;
         if new_beams.is_empty() {
-            return Ok(beams.values().copied().sum::<usize>().to_string());
+            let total_worlds = beams.values().copied().sum::<usize>();
+            return Ok((total_splitters_hit, total_worlds));
         }
         beams = new_beams;
     }
 }
 
-fn step(grid: &Grid<Cell>, beams: &[Point]) -> (Vec<Point>, usize) {
-    let mut new_beams = Vec::new();
-    let mut splits = 0;
-
-    for beam in beams {
-        let Some(next_pos) = beam.next(Direction::Up) else {
-            continue;
-        };
-
-        match grid.get(next_pos) {
-            Some(Cell::Empty) | Some(Cell::Start) => {
-                new_beams.push(next_pos);
-            }
-            Some(Cell::Splitter) => {
-                splits += 1;
-                if let Some(left) = next_pos.next(Direction::Left) {
-                    new_beams.push(left);
-                }
-                if let Some(right) = next_pos.next(Direction::Right) {
-                    new_beams.push(right);
-                }
-            }
-            None => continue,
-        }
-    }
-
-    new_beams.sort_unstable();
-    new_beams.dedup();
-
-    (new_beams, splits)
-}
-
-fn step2(grid: &Grid<Cell>, beams: &AHashMap<Point, usize>) -> AHashMap<Point, usize> {
+fn step(grid: &Grid<Cell>, beams: &AHashMap<Point, usize>) -> (AHashMap<Point, usize>, usize) {
     let mut new_beams = AHashMap::default();
+    let mut spliters_hit = 0;
 
     for (beam, count) in beams {
         let Some(next_pos) = beam.next(Direction::Up) else {
@@ -87,6 +50,7 @@ fn step2(grid: &Grid<Cell>, beams: &AHashMap<Point, usize>) -> AHashMap<Point, u
                 *new_beams.entry(next_pos).or_default() += *count;
             }
             Some(Cell::Splitter) => {
+                spliters_hit += 1;
                 if let Some(left) = next_pos.next(Direction::Left) {
                     *new_beams.entry(left).or_default() += *count;
                 }
@@ -98,7 +62,7 @@ fn step2(grid: &Grid<Cell>, beams: &AHashMap<Point, usize>) -> AHashMap<Point, u
         }
     }
 
-    new_beams
+    (new_beams, spliters_hit)
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
