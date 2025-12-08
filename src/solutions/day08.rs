@@ -1,4 +1,6 @@
-use crate::{solutions::prelude::*, utils::freq_table};
+use ahash::AHashMap;
+
+use crate::solutions::prelude::*;
 
 pub fn problem1(input: &str) -> Result<String, anyhow::Error> {
     problem1_(input, 1000)
@@ -7,41 +9,26 @@ pub fn problem1(input: &str) -> Result<String, anyhow::Error> {
 fn problem1_(input: &str, n: usize) -> Result<String, anyhow::Error> {
     let points = parse!(input);
 
-    let pairs = (0..points.len()).flat_map(|i| (i + 1..points.len()).map(move |j| (i, j)));
-
-    let mut distances = pairs
-        .map(|(i, j)| ((i, j), points[i].distance(&points[j])))
-        .collect::<Vec<_>>();
-    distances.sort_unstable_by_key(|(_, distance)| *distance);
+    let distances = pairs_by_distance(&points);
 
     let pairs_to_consider = distances[..n.min(distances.len())]
         .iter()
         .map(|(pair, _)| *pair);
 
-    let mut assigned_circuit: Vec<_> = (0..points.len()).collect();
+    let mut groups = Groups::default();
     for pair in pairs_to_consider {
-        if assigned_circuit[pair.0] != assigned_circuit[pair.1] {
-            let new_id = assigned_circuit[pair.0];
-            let old_id = assigned_circuit[pair.1];
-            assigned_circuit.iter_mut().for_each(|id| {
-                if *id == old_id {
-                    *id = new_id;
-                }
-            });
-        }
+        groups.connect(&pair.0, &pair.1);
     }
 
     let sorted_freq = {
-        let freq = freq_table(assigned_circuit);
-        let mut freq_vec: Vec<_> = freq.into_iter().collect();
-        freq_vec.sort_unstable_by_key(|&(_, count)| std::cmp::Reverse(count));
-        freq_vec
+        let mut freq = groups.iter().map(|group| group.len()).collect::<Vec<_>>();
+        freq.sort_unstable();
+        freq
     };
 
-    let ans = sorted_freq[..3]
+    let ans = sorted_freq[sorted_freq.len() - 3..]
         .iter()
-        .map(|&(_, count)| count as u64)
-        .product::<u64>();
+        .product::<usize>();
 
     Ok(ans.to_string())
 }
@@ -49,34 +36,34 @@ fn problem1_(input: &str, n: usize) -> Result<String, anyhow::Error> {
 pub fn problem2(input: &str) -> Result<String, anyhow::Error> {
     let points = parse!(input);
 
-    let pairs = (0..points.len()).flat_map(|i| (i + 1..points.len()).map(move |j| (i, j)));
-
-    let mut distances = pairs
-        .map(|(i, j)| ((i, j), points[i].distance(&points[j])))
-        .collect::<Vec<_>>();
-    distances.sort_unstable_by_key(|(_, distance)| *distance);
+    let distances = pairs_by_distance(&points);
 
     let pairs_to_consider = distances.iter().map(|(pair, _)| *pair);
 
-    let mut assigned_circuit: Vec<_> = (0..points.len()).collect();
+    let mut groups = Groups::default();
+    (0..points.len()).for_each(|i| {
+        groups.add_group(i);
+    });
     for pair in pairs_to_consider {
-        if assigned_circuit[pair.0] != assigned_circuit[pair.1] {
-            let new_id = assigned_circuit[pair.0];
-            let old_id = assigned_circuit[pair.1];
-            assigned_circuit.iter_mut().for_each(|id| {
-                if *id == old_id {
-                    *id = new_id;
-                }
-            });
-        }
-
-        if assigned_circuit.iter().all(|&id| id == assigned_circuit[0]) {
+        groups.connect(&pair.0, &pair.1);
+        if groups.len == 1 {
             let ans = points[pair.0].x * points[pair.1].x;
             return Ok(ans.to_string());
         }
     }
 
     unreachable!()
+}
+
+fn pairs_by_distance(points: &[Point]) -> Vec<((usize, usize), u64)> {
+    let pairs = (0..points.len()).flat_map(|i| (i + 1..points.len()).map(move |j| (i, j)));
+
+    let mut distances: Vec<_> = pairs
+        .map(|(i, j)| ((i, j), points[i].distance(&points[j])))
+        .collect();
+    distances.sort_unstable_by_key(|(_, distance)| *distance);
+
+    distances
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -92,6 +79,74 @@ impl Point {
             + self.y.abs_diff(other.y).pow(2)
             + self.z.abs_diff(other.z).pow(2))
         .isqrt()
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+struct Groups<T> {
+    groups: Vec<Vec<T>>,
+    lookup_table: AHashMap<T, usize>,
+    len: usize,
+}
+
+impl<T: Eq + std::hash::Hash + Clone> Groups<T> {
+    fn add_group(&mut self, first_item: T) -> usize {
+        let new_id = self.groups.len();
+        self.lookup_table.insert(first_item.clone(), new_id);
+        self.groups.push(vec![first_item]);
+        self.len += 1;
+        new_id
+    }
+
+    fn connect(&mut self, a: &T, b: &T) {
+        let group_a = self.lookup_table.get(a).copied();
+        let group_b = self.lookup_table.get(b).copied();
+
+        match (group_a, group_b) {
+            (Some(ga), Some(gb)) => {
+                self.merge_groups(ga, gb);
+            }
+            (Some(ga), None) => {
+                self.assign_to_group(b.clone(), ga);
+            }
+            (None, Some(gb)) => {
+                self.assign_to_group(a.clone(), gb);
+            }
+            (None, None) => {
+                let group = self.add_group(a.clone());
+                self.assign_to_group(b.clone(), group);
+            }
+        }
+    }
+
+    fn iter(&self) -> impl Iterator<Item = &Vec<T>> {
+        self.groups.iter().filter(|x| !x.is_empty())
+    }
+
+    fn merge_groups(&mut self, a: usize, b: usize) {
+        if a == b {
+            return;
+        }
+
+        // Ensure a is the larger group
+        let (a, b) = if self.groups[a].len() > self.groups[b].len() {
+            (a, b)
+        } else {
+            (b, a)
+        };
+
+        let b_values = std::mem::take(&mut self.groups[b]);
+
+        for v in &b_values {
+            *self.lookup_table.get_mut(v).unwrap() = a;
+        }
+        self.groups[a].extend(b_values);
+        self.len -= 1;
+    }
+
+    fn assign_to_group(&mut self, item: T, group_id: usize) {
+        self.lookup_table.insert(item.clone(), group_id);
+        self.groups[group_id].push(item);
     }
 }
 
