@@ -20,9 +20,16 @@ pub fn problem1(input: &str) -> Result<String, anyhow::Error> {
 pub fn problem2(input: &str) -> Result<String, anyhow::Error> {
     let points = parse!(input);
     let candidates = candidates_by_area(&points);
-    let row_ranges = ranges_per_row(&points);
 
-    for (a, b, area) in candidates {
+    let cc = CoordinateCompressor::new(&points);
+    let compressed_points: Vec<_> = points.iter().map(|p| cc.compress(p).unwrap()).collect();
+    let compressed_candidates = candidates
+        .iter()
+        .map(|(a, b, area)| (cc.compress(a).unwrap(), cc.compress(b).unwrap(), *area));
+
+    let row_ranges = ranges_per_row(&compressed_points);
+
+    for (a, b, area) in compressed_candidates {
         if check_rectangle(a, b, &row_ranges) {
             return Ok(area.to_string());
         }
@@ -74,6 +81,55 @@ fn ranges_per_row(points: &[Point]) -> Vec<Option<InclusiveRange>> {
             acc[y] = Some(acc[y].map(|r| r.merge(&x_range)).unwrap_or(x_range));
             acc
         })
+}
+
+#[derive(Clone, Debug)]
+struct CoordinateCompressor {
+    x_values: Vec<usize>,
+    y_values: Vec<usize>,
+
+    x_lookup: ahash::AHashMap<usize, usize>,
+    y_lookup: ahash::AHashMap<usize, usize>,
+}
+
+impl CoordinateCompressor {
+    fn new(points: &[Point]) -> Self {
+        let mut x_values: Vec<_> = points.iter().map(|p| p.x).collect();
+        x_values.sort_unstable();
+        x_values.dedup();
+
+        let mut y_values: Vec<_> = points.iter().map(|p| p.y).collect();
+        y_values.sort_unstable();
+        y_values.dedup();
+
+        let x_lookup: ahash::AHashMap<_, _> = x_values
+            .iter()
+            .copied()
+            .enumerate()
+            .map(|(i, x)| (x, i))
+            .collect();
+
+        let y_lookup: ahash::AHashMap<_, _> = y_values
+            .iter()
+            .copied()
+            .enumerate()
+            .map(|(i, x)| (x, i))
+            .collect();
+
+        Self {
+            x_values,
+            y_values,
+            x_lookup,
+            y_lookup,
+        }
+    }
+
+    fn compress(&self, point: &Point) -> Option<Point> {
+        Some(Point::new(
+            *self.x_lookup.get(&point.x)?,
+            *self.y_lookup.get(&point.y)?,
+        ))
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
