@@ -1,20 +1,28 @@
 use crate::solutions::prelude::*;
 
 use ahash::AHashSet;
+use good_lp::{
+    Expression, Solution, SolverModel, microlp,
+    variable::{ProblemVariables, VariableDefinition},
+};
 
 pub fn problem1(input: &str) -> Result<String, anyhow::Error> {
     let machines = parse!(input);
 
-    let ans: usize = machines.iter().map(|m| num_buttons(m)).sum();
+    let ans: usize = machines.iter().map(|m| num_buttons_indicators(m)).sum();
 
     Ok(ans.to_string())
 }
 
-pub fn problem2(_input: &str) -> Result<String, anyhow::Error> {
-    bail!("not yet implemented")
+pub fn problem2(input: &str) -> Result<String, anyhow::Error> {
+    let machines = parse!(input);
+
+    let ans: usize = machines.iter().map(|m| num_buttons_joltages(m)).sum();
+
+    Ok(ans.to_string())
 }
 
-fn num_buttons(m: &Machine) -> usize {
+fn num_buttons_indicators(m: &Machine) -> usize {
     let mut next_state: AHashSet<Vec<bool>> = AHashSet::new();
     next_state.insert(vec![false; m.indicators.len()]);
     let mut presses = 0;
@@ -44,6 +52,32 @@ fn apply_button(indicators: &[bool], button: &[usize]) -> Vec<bool> {
     }
 
     ret
+}
+
+fn num_buttons_joltages(m: &Machine) -> usize {
+    let mut pv = ProblemVariables::new();
+    let vars: Vec<_> =
+        pv.add_all((0..m.buttons.len()).map(|_| VariableDefinition::new().integer().min(0)));
+
+    let problem_expr: Expression = vars.iter().sum();
+
+    let model =
+        pv.minimise(problem_expr)
+            .using(microlp)
+            .with_all(m.joltages.iter().enumerate().map(|(i, rhs)| {
+                vars.iter()
+                    .enumerate()
+                    .filter(|(x, _)| m.buttons[*x].contains(&i))
+                    .map(|(_, v)| v)
+                    .sum::<Expression>()
+                    .eq(*rhs as i32)
+            }));
+
+    let solution = model.solve().unwrap();
+
+    vars.iter()
+        .map(|v| solution.value(*v).round() as usize)
+        .sum()
 }
 
 #[derive(Clone, Debug)]
@@ -95,6 +129,6 @@ mod tests {
 
     #[test]
     fn problem2_test() {
-        //assert_eq!(problem2(EXAMPLE_INPUT).unwrap(), "")
+        assert_eq!(problem2(EXAMPLE_INPUT).unwrap(), "33")
     }
 }

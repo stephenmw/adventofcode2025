@@ -8,6 +8,7 @@ ahash = "0.8"
 anyhow = "1.0"
 arrayvec = "0.7"
 clap = { version = "4", features = ["derive"]}
+good_lp = { version = "1.14", features = ["microlp"], default-features = false }
 lazy_static = "1.5"
 nom = "8"
 rand = "0.9"
