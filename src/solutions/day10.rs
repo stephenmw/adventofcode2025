@@ -56,22 +56,29 @@ fn apply_button(indicators: &[bool], button: &[usize]) -> Vec<bool> {
 
 fn num_buttons_joltages(m: &Machine) -> usize {
     let mut pv = ProblemVariables::new();
-    let vars: Vec<_> =
-        pv.add_all((0..m.buttons.len()).map(|_| VariableDefinition::new().integer().min(0)));
+    let vars = pv.add_vector(VariableDefinition::new().integer().min(0), m.buttons.len());
+
+    let joltage_expressions = m.buttons.iter().zip(&vars).fold(
+        vec![Expression::with_capacity(vars.len()); m.joltages.len()],
+        |mut acc, (button, var)| {
+            for &joltage_id in button {
+                acc[joltage_id] += var
+            }
+            acc
+        },
+    );
+
+    let constrants = joltage_expressions
+        .into_iter()
+        .zip(&m.joltages)
+        .map(|(exp, &rhs)| exp.eq(rhs as i32));
 
     let problem_expr: Expression = vars.iter().sum();
 
-    let model =
-        pv.minimise(problem_expr)
-            .using(microlp)
-            .with_all(m.joltages.iter().enumerate().map(|(i, rhs)| {
-                vars.iter()
-                    .enumerate()
-                    .filter(|(x, _)| m.buttons[*x].contains(&i))
-                    .map(|(_, v)| v)
-                    .sum::<Expression>()
-                    .eq(*rhs as i32)
-            }));
+    let model = pv
+        .minimise(problem_expr)
+        .using(microlp)
+        .with_all(constrants);
 
     let solution = model.solve().unwrap();
 
