@@ -1,34 +1,25 @@
 use crate::solutions::prelude::*;
 
-use ahash::{AHashMap, AHashSet};
+use ahash::AHashMap;
 
 pub fn problem1(input: &str) -> Result<String, anyhow::Error> {
     let graph = parse!(input);
 
-    fn rec<'a>(
-        graph: &'a AHashMap<&str, Vec<&str>>,
-        seen: &mut AHashSet<&'a str>,
-        node: &'a str,
-    ) -> usize {
+    fn rec<'a>(graph: &'a AHashMap<&str, Vec<&str>>, node: &'a str) -> usize {
         if node == "out" {
             return 1;
-        }
-
-        if !seen.insert(node) {
-            return 0;
         }
 
         let ret: usize = graph
             .get(node)
             .unwrap()
             .iter()
-            .map(|&child| rec(graph, seen, child))
+            .map(|&child| rec(graph, child))
             .sum();
 
-        seen.remove(node);
         ret
     }
-    let ans = rec(&graph, &mut AHashSet::new(), "you");
+    let ans = rec(&graph, "you");
     Ok(ans.to_string())
 }
 
@@ -37,38 +28,37 @@ pub fn problem2(input: &str) -> Result<String, anyhow::Error> {
 
     fn rec<'a>(
         graph: &'a AHashMap<&str, Vec<&str>>,
-        seen: &mut AHashSet<&'a str>,
-        node: &'a str,
         memo: &mut AHashMap<(&'a str, bool, bool), usize>,
+        node: &'a str,
+        dac: bool,
+        fft: bool,
     ) -> usize {
         if node == "out" {
-            if seen.contains("dac") && seen.contains("fft") {
+            if dac && fft {
                 return 1;
             } else {
                 return 0;
             }
         }
 
-        if let Some(&ans) = memo.get(&(node, seen.contains("dac"), seen.contains("fft"))) {
+        if let Some(&ans) = memo.get(&(node, dac, fft)) {
             return ans;
         }
 
-        if !seen.insert(node) {
-            return 0;
-        }
+        let n_dac = dac || node == "dac";
+        let n_fft = fft || node == "fft";
 
         let ret: usize = graph
             .get(node)
             .unwrap()
             .iter()
-            .map(|&child| rec(graph, seen, child, memo))
+            .map(|&child| rec(graph, memo, child, n_dac, n_fft))
             .sum();
 
-        seen.remove(node);
-        memo.insert((node, seen.contains("dac"), seen.contains("fft")), ret);
+        memo.insert((node, dac, fft), ret);
         ret
     }
-    let ans = rec(&graph, &mut AHashSet::new(), "svr", &mut AHashMap::new());
+    let ans = rec(&graph, &mut AHashMap::new(), "svr", false, false);
     Ok(ans.to_string())
 }
 
