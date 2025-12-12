@@ -83,7 +83,7 @@ mod parser {
             value(Cell::Empty, char('.')),
         ));
         let row = many1(cell);
-        let grid = many1(ws_line(row)).map(|rows| Grid::new(rows));
+        let grid = many1(ws_line(row)).map(Grid::new);
         ws_all_consuming(grid).parse_complete(input)
     }
 }

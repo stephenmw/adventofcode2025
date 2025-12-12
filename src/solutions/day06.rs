@@ -74,7 +74,7 @@ mod parser {
     }
 
     fn parse_input(input: &str) -> Vec<Problem> {
-        let lines: Vec<_> = input.lines().map(|line| parse_line(line)).collect();
+        let lines: Vec<_> = input.lines().map(parse_line).collect();
         let Some((op_line, num_lines)) = lines.split_last() else {
             panic!("no op line");
         };

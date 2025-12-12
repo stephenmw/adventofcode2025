@@ -26,13 +26,14 @@ fn is_valid(n: u64) -> bool {
     }
 
     let mid = s.len() / 2;
-    &s[..mid] != &s[mid..]
+    let (a, b) = s.split_at(mid);
+    a != b
 }
 
 fn is_valid2(n: u64) -> bool {
     let s = n.to_string().into_bytes();
     for pattern_size in 1..=s.len() / 2 {
-        if s.len() % pattern_size == 0 {
+        if s.len().is_multiple_of(pattern_size) {
             let (pattern, rest) = s.split_at(pattern_size);
             if rest.chunks(pattern_size).all(|x| x == pattern) {
                 return false;
@@ -40,7 +41,7 @@ fn is_valid2(n: u64) -> bool {
         }
     }
 
-    return true;
+    true
 }
 
 mod parser {

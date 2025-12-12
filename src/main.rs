@@ -122,5 +122,5 @@ fn run_problem(day: usize, problem: usize, input: Option<&str>) -> Result<(Strin
     let ans = problem_fn(input).context("problemfn failed")?;
     let end = Instant::now();
 
-    return Ok((ans, end.duration_since(start)));
+    Ok((ans, end.duration_since(start)))
 }

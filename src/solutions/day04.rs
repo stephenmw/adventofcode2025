@@ -63,7 +63,7 @@ mod parser {
             char('@').map(|_| Cell::Occupied),
         ));
         let row = ws_line(many1(cell));
-        let grid = many1(row).map(|rows| Grid::new(rows));
+        let grid = many1(row).map(Grid::new);
         ws_all_consuming(grid).parse_complete(input)
     }
 }

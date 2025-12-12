@@ -9,7 +9,7 @@ use good_lp::{
 pub fn problem1(input: &str) -> Result<String, anyhow::Error> {
     let machines = parse!(input);
 
-    let ans: usize = machines.iter().map(|m| num_buttons_indicators(m)).sum();
+    let ans: usize = machines.iter().map(num_buttons_indicators).sum();
 
     Ok(ans.to_string())
 }
@@ -17,7 +17,7 @@ pub fn problem1(input: &str) -> Result<String, anyhow::Error> {
 pub fn problem2(input: &str) -> Result<String, anyhow::Error> {
     let machines = parse!(input);
 
-    let ans: usize = machines.iter().map(|m| num_buttons_joltages(m)).sum();
+    let ans: usize = machines.iter().map(num_buttons_joltages).sum();
 
     Ok(ans.to_string())
 }
