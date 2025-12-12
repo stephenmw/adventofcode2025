@@ -1,6 +1,6 @@
 use crate::solutions::prelude::*;
 
-use crate::range::Range;
+use crate::util::Range;
 
 pub fn problem1(input: &str) -> Result<String, anyhow::Error> {
     solve(input, is_valid)

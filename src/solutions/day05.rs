@@ -1,6 +1,6 @@
 use crate::solutions::prelude::*;
 
-use crate::range::{Range, RangeSet};
+use crate::util::{Range, RangeSet};
 
 pub fn problem1(input: &str) -> Result<String, anyhow::Error> {
     let (ranges, ingredients) = parse!(input);

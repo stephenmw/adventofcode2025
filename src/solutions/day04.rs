@@ -1,6 +1,6 @@
 use crate::solutions::prelude::*;
 
-use crate::grid::{Grid, Point};
+use crate::util::grid::{Grid, Point};
 
 pub fn problem1(input: &str) -> Result<String, anyhow::Error> {
     let grid = parse!(input);

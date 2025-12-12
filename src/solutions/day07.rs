@@ -2,7 +2,7 @@ use ahash::AHashMap;
 
 use crate::solutions::prelude::*;
 
-use crate::grid::{Direction, Grid, Point};
+use crate::util::grid::{Direction, Grid, Point};
 
 pub fn problem1(input: &str) -> Result<String, anyhow::Error> {
     let (splitters_hit, _) = solve(input)?;

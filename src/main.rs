@@ -1,7 +1,6 @@
-mod grid;
 mod parser;
-mod range;
 mod solutions;
+mod util;
 
 #[macro_use]
 extern crate lazy_static;
