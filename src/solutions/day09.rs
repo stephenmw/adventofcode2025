@@ -85,8 +85,8 @@ fn ranges_per_row(points: &[Point]) -> Vec<Option<InclusiveRange>> {
 
 #[derive(Clone, Debug)]
 struct CoordinateCompressor {
-    x_values: Vec<usize>,
-    y_values: Vec<usize>,
+    _x_values: Vec<usize>,
+    _y_values: Vec<usize>,
 
     x_lookup: ahash::AHashMap<usize, usize>,
     y_lookup: ahash::AHashMap<usize, usize>,
@@ -117,8 +117,8 @@ impl CoordinateCompressor {
             .collect();
 
         Self {
-            x_values,
-            y_values,
+            _x_values: x_values,
+            _y_values: y_values,
             x_lookup,
             y_lookup,
         }
