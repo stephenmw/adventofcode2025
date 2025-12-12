@@ -74,11 +74,11 @@ struct Point {
 }
 
 impl Point {
+    // Computes the squared Euclidean distance between two points.
     fn distance(&self, other: &Point) -> u64 {
-        (self.x.abs_diff(other.x).pow(2)
+        self.x.abs_diff(other.x).pow(2)
             + self.y.abs_diff(other.y).pow(2)
-            + self.z.abs_diff(other.z).pow(2))
-        .isqrt()
+            + self.z.abs_diff(other.z).pow(2)
     }
 }
 
